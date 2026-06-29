@@ -7,6 +7,7 @@ let room = null;
 let showSpyMap = false;
 let audioContext = null;
 let lastGameStatus = "lobby";
+let lastRoomState = null;
 
 const savedName = localStorage.getItem("codename-player") || "";
 $("#createName").value = savedName;
@@ -42,6 +43,16 @@ function tone(frequency, duration = 0.08, type = "sine", gain = 0.045) {
 }
 
 function sound(name) {
+  if (name === "start") {
+    tone(392, 0.08, "triangle", 0.045);
+    setTimeout(() => tone(523, 0.1, "triangle", 0.05), 85);
+    return;
+  }
+  if (name === "turn") {
+    tone(330, 0.06, "square", 0.03);
+    setTimeout(() => tone(494, 0.08, "square", 0.035), 70);
+    return;
+  }
   if (name === "success") return tone(740, 0.11, "triangle", 0.055);
   if (name === "error") return tone(180, 0.15, "sawtooth", 0.035);
   if (name === "reveal") {
@@ -100,6 +111,12 @@ function roleLabel(role) {
 
 function teamArabic(team) {
   return team === "red" ? "الأحمر" : team === "blue" ? "الأزرق" : "بدون فريق";
+}
+
+function playerLine(player) {
+  const ready = player.ready ? "جاهز" : "ينتظر";
+  const readyClass = player.ready ? "ready" : "waiting";
+  return `<li><span>${player.name} - ${roleLabel(player.role)}</span><em class="${readyClass}">${ready}</em></li>`;
 }
 
 function remaining(team) {
@@ -166,8 +183,8 @@ function renderPlayers() {
   const blue = room?.players.filter((p) => p.team === "blue") || [];
   $("#redTeamTitle").textContent = "الفريق الأحمر";
   $("#blueTeamTitle").textContent = "الفريق الأزرق";
-  $("#redPlayers").innerHTML = red.map((p) => `<li>${p.name} - ${roleLabel(p.role)}</li>`).join("") || "<li>لا يوجد</li>";
-  $("#bluePlayers").innerHTML = blue.map((p) => `<li>${p.name} - ${roleLabel(p.role)}</li>`).join("") || "<li>لا يوجد</li>";
+  $("#redPlayers").innerHTML = red.map(playerLine).join("") || "<li>لا يوجد</li>";
+  $("#bluePlayers").innerHTML = blue.map(playerLine).join("") || "<li>لا يوجد</li>";
   $("#redRemaining").textContent = `${remaining("red")} بطاقات`;
   $("#blueRemaining").textContent = `${remaining("blue")} بطاقات`;
 }
@@ -196,6 +213,8 @@ function renderRoom() {
   $("#modeBadge").textContent = room.settings.mode === "lamma" ? "طور لمة" : "طور أونلاين";
   $("#playerName").value = me?.name || "";
   $("#playerRole").value = me?.role || "guesser";
+  $("#readyButton").textContent = me?.ready ? "إلغاء الجاهزية" : "جاهز للأونلاين";
+  $("#readyButton").classList.toggle("is-ready", Boolean(me?.ready));
   $("#turnPill").textContent = room.game.status === "playing" ? `دور الفريق ${teamArabic(room.game.currentTeam)}` : "انتظار البداية";
   $("#turnPill").classList.toggle("blue", room.game.currentTeam === "blue");
   $("#activeHint").textContent = room.game.hint ? `التلميح: ${room.game.hint.word} - ${room.game.hint.number}` : "التلميح: لا يوجد";
@@ -263,6 +282,12 @@ document.addEventListener("click", (event) => {
 
 window.addEventListener("popstate", () => go(pageFromPath(), false));
 
+const roomFromLink = new URLSearchParams(location.search).get("room");
+if (roomFromLink) {
+  $("#joinCode").value = roomFromLink.toUpperCase();
+  go("rooms", false);
+}
+
 $("#createRoomForm").addEventListener("submit", (event) => {
   event.preventDefault();
   const playerName = $("#createName").value.trim();
@@ -304,6 +329,13 @@ $("#playerName").addEventListener("change", () => updateMe({ name: $("#playerNam
 $("#playerRole").addEventListener("change", () => updateMe({ role: $("#playerRole").value }));
 $("#joinRedButton").addEventListener("click", () => updateMe({ team: "red" }));
 $("#joinBlueButton").addEventListener("click", () => updateMe({ team: "blue" }));
+$("#readyButton").addEventListener("click", () => {
+  const me = myPlayer();
+  if (!room) return message("ادخل غرفة أولاً.");
+  if (room.settings.mode !== "online") return message("الجاهزية مخصصة للأونلاين.");
+  if (!me?.team) return message("اختر فريقك قبل الجاهزية.");
+  updateMe({ ready: !me.ready });
+});
 
 $("#toggleMapButton").addEventListener("click", () => {
   const me = myPlayer();
@@ -421,7 +453,18 @@ $("#copyLinkButton").addEventListener("click", async () => {
   }
 });
 
+function playOnlineStateSounds(previous, next) {
+  if (!previous || !next) return;
+  if (previous.game.status !== "playing" && next.game.status === "playing") sound("start");
+  if (previous.game.status === "playing" && next.game.status === "playing" && previous.game.currentTeam !== next.game.currentTeam) sound("turn");
+  const prevRevealed = previous.game.board.filter((card) => card.revealed).length;
+  const nextRevealed = next.game.board.filter((card) => card.revealed).length;
+  if (nextRevealed > prevRevealed) sound("reveal");
+}
+
 socket.on("room:state", (nextRoom) => {
+  playOnlineStateSounds(lastRoomState, nextRoom);
+  lastRoomState = nextRoom;
   room = nextRoom;
   renderRoom();
 });

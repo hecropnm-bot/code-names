@@ -131,6 +131,11 @@ p { color: var(--gray-text); font-weight: 800; line-height: 1.65; }
 .button-red { background: var(--red); box-shadow: 0 6px 0 var(--red-shadow); }
 .button-blue { background: var(--blue); box-shadow: 0 6px 0 var(--blue-shadow); }
 .button-gold { color: var(--dark-blue); background: var(--golden); box-shadow: 0 6px 0 #d6a700; }
+.button-gold.is-ready {
+  color: #fff;
+  background: var(--green);
+  box-shadow: 0 6px 0 var(--green-shadow);
+}
 .full { width: 100%; margin-top: 12px; }
 
 .hero-art { display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 16px; }
@@ -302,6 +307,32 @@ textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,176,24
 .red-box { background: var(--red); box-shadow: 0 5px 0 var(--red-shadow); }
 .blue-box { background: var(--blue); box-shadow: 0 5px 0 var(--blue-shadow); }
 .team-box ul { min-height: 28px; margin: 8px 0; padding: 0 18px 0 0; }
+.team-box li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.team-box li span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.team-box li em {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.22);
+  font-size: .72rem;
+  font-style: normal;
+}
+.team-box li em.ready {
+  background: rgba(88,204,2,.95);
+  color: #fff;
+}
+.team-box li em.waiting {
+  background: rgba(255,255,255,.3);
+}
 .team-box small { display: block; }
 .lamma-panel {
   border-color: #ffe08a;
@@ -589,10 +620,7 @@ textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,176,24
     padding-top: 8px;
   }
   body[data-page="game"][data-game-status="playing"] .mobile-playbar-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  body[data-page="game"][data-game-status="playing"] #quickSpyButton {
-    display: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .mobile-playbar-status {
     display: flex;

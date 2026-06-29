@@ -276,8 +276,16 @@ io.on("connection", (socket) => {
     const player = room?.players.get(socket.id);
     if (!room || !player) return;
     if (typeof name === "string" && name.trim()) player.name = name.trim().slice(0, 18);
-    if (team === "red" || team === "blue" || team === null) player.team = team;
-    if (role === "guesser" || role === "spymaster") player.role = role;
+    let changedSetup = false;
+    if (team === "red" || team === "blue" || team === null) {
+      changedSetup = player.team !== team;
+      player.team = team;
+    }
+    if (role === "guesser" || role === "spymaster") {
+      changedSetup = changedSetup || player.role !== role;
+      player.role = role;
+    }
+    if (changedSetup) player.ready = false;
     if (typeof ready === "boolean") player.ready = ready;
     emitRoom(room);
   });
@@ -292,9 +300,11 @@ io.on("connection", (socket) => {
       const blueSpy = [...room.players.values()].some((p) => p.team === "blue" && p.role === "spymaster");
       const redGuess = [...room.players.values()].some((p) => p.team === "red" && p.role === "guesser");
       const blueGuess = [...room.players.values()].some((p) => p.team === "blue" && p.role === "guesser");
+      const allReady = [...room.players.values()].every((p) => p.team && p.ready);
       if (!hasRed || !hasBlue) return reply?.({ ok: false, message: "القانون الصارم: يجب وجود لاعب في كل فريق." });
       if (!redSpy || !blueSpy) return reply?.({ ok: false, message: "القانون الصارم: كل فريق يحتاج قائدًا قبل البداية." });
       if (!redGuess || !blueGuess) return reply?.({ ok: false, message: "القانون الصارم: كل فريق يحتاج لاعب تخمين واحد على الأقل." });
+      if (!allReady) return reply?.({ ok: false, message: "الأونلاين يحتاج كل اللاعبين يختارون فريقهم ويضغطون جاهز." });
     } else if (room.hostId !== socket.id) {
       return reply?.({ ok: false, message: "طور لمة يبدأه صاحب الغرفة فقط." });
     }
