@@ -1,4 +1,14 @@
-const socket = io();
+const realtimeAvailable = typeof window.io === "function";
+const offlineSocketMessage = "الأونلاين يحتاج خادم Node يدعم Socket.IO. على Vercel تظهر الواجهة، ولتشغيل الغرف الحقيقية استخدم Render أو Railway.";
+const socket = realtimeAvailable
+  ? window.io()
+  : {
+      emit(_event, _payload, reply) {
+        message(offlineSocketMessage);
+        if (typeof reply === "function") reply({ ok: false, message: offlineSocketMessage });
+      },
+      on() {}
+    };
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -13,6 +23,11 @@ const savedName = localStorage.getItem("codename-player") || "";
 $("#createName").value = savedName;
 $("#joinName").value = savedName;
 $("#quickLammaName").value = savedName;
+
+if (!realtimeAvailable) {
+  $("#roomMessage").textContent = offlineSocketMessage;
+  $("#actionMessage").textContent = offlineSocketMessage;
+}
 
 function go(page, push = true) {
   $$(".page").forEach((section) => section.classList.toggle("active", section.dataset.page === page));
