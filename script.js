@@ -11,6 +11,7 @@ let audioContext = null;
 let lastGameStatus = "lobby";
 let lastRoomState = null;
 let localRoom = null;
+let pendingGuardAction = null;
 
 const LOCAL_PLAYER_ID = "local-host";
 const LOCAL_SAVE_KEY = "codename-local-lamma";
@@ -359,6 +360,24 @@ function closeHintSheet() {
   $("#hintSheet").setAttribute("aria-hidden", "true");
 }
 
+function openCaptainGuard(action) {
+  pendingGuardAction = action;
+  $("#captainGuard").classList.add("visible");
+  $("#captainGuard").setAttribute("aria-hidden", "false");
+}
+
+function closeCaptainGuard() {
+  pendingGuardAction = null;
+  $("#captainGuard").classList.remove("visible");
+  $("#captainGuard").setAttribute("aria-hidden", "true");
+}
+
+function confirmCaptainGuard() {
+  const action = pendingGuardAction;
+  closeCaptainGuard();
+  if (typeof action === "function") action();
+}
+
 function submitHint(word, number, afterSuccess = () => {}) {
   if (!room) return message("ادخل غرفة أولاً.");
   socket.emit("game:hint", {
@@ -613,7 +632,14 @@ $("#toggleMapButton").addEventListener("click", () => {
   if (!room) return message("ادخل غرفة أولاً.");
   if (room.settings.mode !== "lamma" && me?.role !== "spymaster") return message("خريطة القائد تظهر لمن اختار دور قائد الفريق فقط.");
   if (room.settings.mode === "lamma" && room.hostId !== room.me) return message("في طور لمة صاحب الغرفة فقط يفتح خريطة القائد.");
-  if (!showSpyMap && !confirm("هذا الوضع مخصص للقادة فقط. لا تدع اللاعبين يرونه.")) return;
+  if (!showSpyMap) {
+    openCaptainGuard(() => {
+      showSpyMap = true;
+      sound("success");
+      renderRoom();
+    });
+    return;
+  }
   showSpyMap = !showSpyMap;
   renderRoom();
 });
@@ -622,7 +648,14 @@ $("#captainModeButton").addEventListener("click", () => {
   if (!room) return message("ادخل غرفة أولاً.");
   if (room.settings.mode !== "lamma") return message("وضع القائد السريع خاص بطور لمة.");
   if (room.hostId !== room.me) return message("صاحب الغرفة فقط يتحكم بطور لمة.");
-  if (!showSpyMap && !confirm("اعرض الخريطة للقائد فقط. أبعد الهاتف عن اللاعبين قبل الموافقة.")) return;
+  if (!showSpyMap) {
+    openCaptainGuard(() => {
+      showSpyMap = true;
+      sound("success");
+      renderRoom();
+    });
+    return;
+  }
   showSpyMap = true;
   sound("success");
   renderRoom();
@@ -685,6 +718,11 @@ $("#closeHintSheetButton").addEventListener("click", closeHintSheet);
 $("#hintSheet").addEventListener("click", (event) => {
   if (event.target.id === "hintSheet") closeHintSheet();
 });
+$("#captainGuardCancel").addEventListener("click", closeCaptainGuard);
+$("#captainGuardConfirm").addEventListener("click", confirmCaptainGuard);
+$("#captainGuard").addEventListener("click", (event) => {
+  if (event.target.id === "captainGuard") closeCaptainGuard();
+});
 $("#quickHintForm").addEventListener("submit", (event) => {
   event.preventDefault();
   submitHint($("#quickHintWord").value, $("#quickHintNumber").value, () => {
@@ -703,9 +741,12 @@ $("#quickSpyButton").addEventListener("click", () => {
       showSpyMap = false;
       message("وضع التخمين مفعل. الهاتف جاهز للاعبين.", false);
     } else {
-      if (!confirm("اعرض الخريطة للقائد فقط. أبعد الهاتف عن اللاعبين قبل الموافقة.")) return;
-      showSpyMap = true;
-      sound("success");
+      openCaptainGuard(() => {
+        showSpyMap = true;
+        sound("success");
+        renderRoom();
+      });
+      return;
     }
     renderRoom();
     return;

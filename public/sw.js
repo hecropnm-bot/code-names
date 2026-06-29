@@ -1,4 +1,4 @@
-const CACHE_NAME = "code-names-ar-v3";
+const CACHE_NAME = "code-names-ar-v4";
 const ASSETS = [
   "/",
   "/styles.css",

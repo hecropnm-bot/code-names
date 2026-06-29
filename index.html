@@ -10,7 +10,7 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -274,6 +274,18 @@
           <label>العدد <input id="quickHintNumber" type="number" min="1" max="9" /></label>
           <button class="button button-primary" type="submit">إرسال التلميح</button>
         </form>
+      </section>
+    </div>
+
+    <div class="sheet-overlay guard-overlay" id="captainGuard" aria-hidden="true">
+      <section class="sheet-panel guard-panel" role="dialog" aria-modal="true" aria-labelledby="captainGuardTitle">
+        <div class="guard-icon" aria-hidden="true">ق</div>
+        <h3 id="captainGuardTitle">وضع القائد</h3>
+        <p>اعرض الخريطة للقائد فقط. أبعد الهاتف عن اللاعبين قبل المتابعة.</p>
+        <div class="guard-actions">
+          <button class="button button-secondary" id="captainGuardCancel" type="button">إلغاء</button>
+          <button class="button button-primary" id="captainGuardConfirm" type="button">عرض الخريطة</button>
+        </div>
       </section>
     </div>
 

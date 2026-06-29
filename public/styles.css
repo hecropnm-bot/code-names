@@ -26,7 +26,7 @@ body {
   margin: 0;
   color: var(--dark-blue);
   background: linear-gradient(180deg, #ffffff 0%, #effaff 42%, #fff9e7 100%);
-  font-family: "Nunito", Tahoma, Arial, sans-serif;
+  font-family: "Tajawal", Tahoma, Arial, sans-serif;
   min-width: 300px;
   overflow-x: hidden;
   text-rendering: optimizeLegibility;
@@ -461,6 +461,37 @@ textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,176,24
   background: #fff;
   box-shadow: 0 8px 0 var(--border-color);
 }
+.guard-overlay {
+  align-items: center;
+}
+.guard-panel {
+  width: min(390px, calc(100vw - 28px));
+  text-align: center;
+}
+.guard-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 12px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--dark-blue);
+  box-shadow: 0 5px 0 #172437;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+.guard-panel p {
+  margin: 8px auto 16px;
+  color: var(--gray-text);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.guard-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 .sheet-header {
   display: flex;
   align-items: center;
@@ -568,9 +599,10 @@ textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,176,24
   }
   .word-card {
     min-height: clamp(56px, 17vw, 72px);
-    padding: 7px 3px;
-    font-size: clamp(.68rem, 2.55vw, .86rem);
-    line-height: 1.2;
+    padding: 7px 4px;
+    font-size: clamp(.72rem, 2.7vw, .9rem);
+    line-height: 1.28;
+    font-weight: 800;
     overflow-wrap: anywhere;
   }
   .identity {
@@ -623,12 +655,12 @@ textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,176,24
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .mobile-playbar-status {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
     gap: 10px;
     min-width: 0;
-    font-size: .86rem;
+    font-size: .9rem;
     font-weight: 900;
   }
   .mobile-playbar-status span {
@@ -663,6 +695,12 @@ textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,176,24
   }
   .sheet-overlay { padding: 10px; }
   .quick-hint-form { grid-template-columns: 1fr; }
+  .guard-panel {
+    align-self: end;
+    width: 100%;
+    padding: 18px 14px;
+  }
+  .guard-actions { grid-template-columns: 1fr; }
 }
 @media (max-width: 430px) {
   .button { width: 100%; }
@@ -694,7 +732,7 @@ textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,176,24
   }
   .word-card {
     min-height: 54px;
-    font-size: .66rem;
+    font-size: .7rem;
   }
   .button-primary { box-shadow: 0 4px 0 var(--green-shadow); }
   .button-secondary { box-shadow: 0 4px 0 var(--border-color); }
