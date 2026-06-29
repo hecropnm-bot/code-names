@@ -24,6 +24,12 @@ http://localhost:3000
 
 هذا المشروع يحتاج استضافة Node.js تدعم WebSocket مثل Render أو Railway أو Fly.io.
 
+ملاحظة مهمة:
+
+- Vercel مناسب لعرض الواجهة وطور لمة المحلي من جهاز واحد.
+- غرف الأونلاين الحقيقية تحتاج Render أو Railway لأن Socket.IO يحتاج خادم Node دائم.
+- تمت إضافة `render.yaml` لتسهيل نشر نسخة الأونلاين، وتمت إضافة PWA حتى يمكن تثبيت اللعبة على الهاتف.
+
 إعدادات النشر:
 
 - Build command: `npm install`

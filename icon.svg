@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="كود نيمز">
+  <rect width="512" height="512" rx="96" fill="#58cc02"/>
+  <path d="M72 122h160v118H72z" fill="#ff4b4b"/>
+  <path d="M280 122h160v118H280z" fill="#1cb0f6"/>
+  <path d="M72 284h160v106H72z" fill="#ffc800"/>
+  <path d="M280 284h160v106H280z" fill="#111827"/>
+  <text x="256" y="462" text-anchor="middle" font-size="72" font-weight="900" font-family="Tahoma, Arial, sans-serif" fill="#ffffff">ك ن</text>
+</svg>

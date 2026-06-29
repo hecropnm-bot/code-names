@@ -1,0 +1,21 @@
+{
+  "name": "كود نيمز",
+  "short_name": "كود نيمز",
+  "description": "لعبة كود نيمز عربية للفرق، الأونلاين، وطور لمة من هاتف واحد.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#58cc02",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,14 +1,6 @@
 const realtimeAvailable = typeof window.io === "function";
-const offlineSocketMessage = "الأونلاين يحتاج خادم Node يدعم Socket.IO. على Vercel تظهر الواجهة، ولتشغيل الغرف الحقيقية استخدم Render أو Railway.";
-const socket = realtimeAvailable
-  ? window.io()
-  : {
-      emit(_event, _payload, reply) {
-        message(offlineSocketMessage);
-        if (typeof reply === "function") reply({ ok: false, message: offlineSocketMessage });
-      },
-      on() {}
-    };
+const offlineSocketMessage = "الأونلاين يحتاج خادم Node يدعم Socket.IO. طور لمة يعمل على هذا الجهاز، ولتشغيل الغرف الحقيقية استخدم Render أو Railway.";
+const socket = realtimeAvailable ? window.io() : createLocalSocket();
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -18,6 +10,26 @@ let showSpyMap = false;
 let audioContext = null;
 let lastGameStatus = "lobby";
 let lastRoomState = null;
+let localRoom = null;
+
+const LOCAL_PLAYER_ID = "local-host";
+const LOCAL_SAVE_KEY = "codename-local-lamma";
+const LOCAL_WORD_POOL = `
+قمر شمس نجم سماء غيمة مطر بحر نهر جزيرة صحراء غابة جبل وادي مدينة قرية شارع جسر باب نافذة
+بيت مدرسة جامعة مكتبة متحف ملعب سوق حديقة مطار محطة قطار سيارة سفينة طائرة دراجة حصان مفتاح خريطة رسالة سر
+كلمة رقم لون صوت ضوء ظل نار ثلج ذهب فضة ساعة هاتف حاسوب كاميرا كتاب قلم ورقة صندوق كرسي طاولة مصباح
+مرآة سيف درع تاج قناع لعبة لغز ذاكرة حلم فرح خطر طريق رحلة كنز وكيل رمز شبكة قلعة برج كهف بوابة مختبر
+روبوت كوكب مجرة فضاء كابتن فريق بطاقة دليل إشارة علامة ملف صورة نظارة قبعة حقيبة دواء مطبخ فرن ملعقة سلم
+حبل جرس موجة لؤلؤ مرجان نافورة تمثال مسرح سينما أغنية إيقاع عود لوحة حبر صحيفة خبر رئيس وزير محامي قاضي
+شرطي إسعاف مستشفى صيدلية بنك عملة محفظة هدية عيد ضيف مقهى مطعم فندق شاطئ ميناء مرسى بطولة كأس هدف كرة
+تنس سباق مغامرة خطة نقطة دور تلميح قاتل محايد عميل أزرق أحمر بغداد بصرة موصل أربيل نجف كربلاء سامراء
+رمادي كركوك دهوك واسط ديالى ميسان ناصرة حلة كوت عمارة فلوجة تكريت حديثة زاخو دجلة فرات خبز رز لحم دجاج
+سمك بيض جبن لبن حليب عسل شاي قهوة عصير ماء ملح سكر فلفل زيت تمر كعك حلوى فطور غداء عشاء مطعم وصفة
+مذاق رائحة مسرح موسيقى بيانو كمان كاميرا مشهد بطل قصة نهاية بداية فصل صفحة عنوان إعلان بنك مال دينار دولار
+مصنع آلة زر محرك عجلة مسمار مطرقة منشار خوذة عامل مهندس بناء حجر طين زجاج معدن خشب ورشة تجربة خطأ نجاح
+طاقة قوة سرعة زمن مسافة وزن كتلة ذرة خلية نواة جاسوس مهمة سرية قاعدة شيفرة مخبأ بصمة دليل أثر ليل صامت
+مزرعة بستان حقل قمح شعير نخيل بئر دلو فلاح حصاد زقاق قصر ديوان مجلس ضيف دلة فنجان بساط خيمة نار
+`.trim().split(/\s+/);
 
 const savedName = localStorage.getItem("codename-player") || "";
 $("#createName").value = savedName;
@@ -27,6 +39,250 @@ $("#quickLammaName").value = savedName;
 if (!realtimeAvailable) {
   $("#roomMessage").textContent = offlineSocketMessage;
   $("#actionMessage").textContent = offlineSocketMessage;
+}
+
+function createLocalSocket() {
+  const listeners = {};
+  const notify = (event, payload) => (listeners[event] || []).forEach((handler) => handler(payload));
+  return {
+    emit(event, payload = {}, reply) {
+      handleLocalEmit(event, payload, reply, notify);
+    },
+    on(event, handler) {
+      listeners[event] ||= [];
+      listeners[event].push(handler);
+    }
+  };
+}
+
+function localClone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function localShuffle(items) {
+  return [...items].sort(() => Math.random() - 0.5);
+}
+
+function localCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
+function localStarter(value = "random") {
+  if (value === "red" || value === "blue") return value;
+  return Math.random() > 0.5 ? "red" : "blue";
+}
+
+function localTeamName(team) {
+  return team === "red" ? "الأحمر" : "الأزرق";
+}
+
+function localNewGame(settings = {}) {
+  const starter = localStarter(settings.starter);
+  const second = starter === "red" ? "blue" : "red";
+  const roles = localShuffle([
+    ...Array(9).fill(starter),
+    ...Array(8).fill(second),
+    ...Array(7).fill("neutral"),
+    "assassin"
+  ]);
+
+  return {
+    status: "lobby",
+    board: localShuffle(LOCAL_WORD_POOL).slice(0, 25).map((word, index) => ({
+      id: `local-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`,
+      word,
+      role: roles[index],
+      revealed: false
+    })),
+    currentTeam: starter,
+    starter,
+    hint: null,
+    guessesMade: 0,
+    guessLimit: 0,
+    winner: null,
+    message: "",
+    log: [`الفريق ${localTeamName(starter)} يبدأ الجولة.`]
+  };
+}
+
+function localMakeRoom(name, playerName) {
+  const settings = {
+    starter: "random",
+    mode: "lamma",
+    lamma: {
+      redName: "الفريق الأحمر",
+      blueName: "الفريق الأزرق",
+      redCaptain: "قائد الأحمر",
+      blueCaptain: "قائد الأزرق",
+      redPlayers: ["لاعب 1", "لاعب 2"],
+      bluePlayers: ["لاعب 1", "لاعب 2"]
+    }
+  };
+  return {
+    code: localCode(),
+    name: name || "لمة كود نيمز",
+    hostId: LOCAL_PLAYER_ID,
+    me: LOCAL_PLAYER_ID,
+    local: true,
+    settings,
+    players: [{
+      id: LOCAL_PLAYER_ID,
+      name: playerName || "صاحب الهاتف",
+      team: "red",
+      role: "spymaster",
+      ready: true
+    }],
+    game: localNewGame(settings)
+  };
+}
+
+function localSave(notify) {
+  try {
+    localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(localRoom));
+  } catch {}
+  notify("room:state", localClone(localRoom));
+}
+
+function localRemaining(team) {
+  return localRoom.game.board.filter((card) => card.role === team && !card.revealed).length;
+}
+
+function localFinish(winner, text) {
+  localRoom.game.status = "ended";
+  localRoom.game.winner = winner;
+  localRoom.game.message = text;
+  localRoom.game.log.unshift(text);
+}
+
+function localSwitchTurn(reason) {
+  localRoom.game.currentTeam = localRoom.game.currentTeam === "red" ? "blue" : "red";
+  localRoom.game.hint = null;
+  localRoom.game.guessesMade = 0;
+  localRoom.game.guessLimit = 0;
+  localRoom.game.log.unshift(`${reason} الدور الآن للفريق ${localTeamName(localRoom.game.currentTeam)}.`);
+}
+
+function localCleanList(items, fallback) {
+  const list = Array.isArray(items)
+    ? items.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 10)
+    : [];
+  return list.length ? list : fallback;
+}
+
+function handleLocalEmit(event, payload, reply, notify) {
+  if (event === "room:create") {
+    if (payload.mode !== "lamma") {
+      return reply?.({ ok: false, message: "نسخة Vercel تشغل طور لمة على نفس الجهاز. للأونلاين الحقيقي انشر نسخة Node على Render أو Railway." });
+    }
+    localRoom = localMakeRoom(String(payload.name || "").trim(), String(payload.playerName || "").trim());
+    reply?.({ ok: true, code: localRoom.code });
+    return localSave(notify);
+  }
+
+  if (event === "room:join") {
+    return reply?.({ ok: false, message: "الدخول برمز يحتاج خادم أونلاين. طور لمة يعمل مباشرة من زر لمة." });
+  }
+
+  if (!localRoom) {
+    return reply?.({ ok: false, message: "ابدأ طور لمة أولاً." });
+  }
+
+  if (event === "player:update") {
+    const player = localRoom.players[0];
+    if (typeof payload.name === "string" && payload.name.trim()) player.name = payload.name.trim().slice(0, 18);
+    if (payload.team === "red" || payload.team === "blue") player.team = payload.team;
+    if (payload.role === "guesser" || payload.role === "spymaster") player.role = payload.role;
+    return localSave(notify);
+  }
+
+  if (event === "lamma:setup") {
+    const setup = payload.setup || {};
+    const lamma = localRoom.settings.lamma;
+    if (typeof setup.redName === "string" && setup.redName.trim()) lamma.redName = setup.redName.trim().slice(0, 22);
+    if (typeof setup.blueName === "string" && setup.blueName.trim()) lamma.blueName = setup.blueName.trim().slice(0, 22);
+    if (typeof setup.redCaptain === "string" && setup.redCaptain.trim()) lamma.redCaptain = setup.redCaptain.trim().slice(0, 22);
+    if (typeof setup.blueCaptain === "string" && setup.blueCaptain.trim()) lamma.blueCaptain = setup.blueCaptain.trim().slice(0, 22);
+    lamma.redPlayers = localCleanList(setup.redPlayers, lamma.redPlayers);
+    lamma.bluePlayers = localCleanList(setup.bluePlayers, lamma.bluePlayers);
+    localRoom.game.log.unshift("تم تحديث إعدادات طور لمة.");
+    return localSave(notify);
+  }
+
+  if (event === "game:start" || event === "game:new") {
+    localRoom.settings.starter = payload.starter || localRoom.settings.starter || "random";
+    localRoom.game = localNewGame(localRoom.settings);
+    localRoom.game.status = "playing";
+    localRoom.game.log.unshift(event === "game:start"
+      ? "بدأ طور لمة المحلي. افتح وضع القائد للتلميح ثم أخف الخريطة قبل التخمين."
+      : "جولة محلية جديدة بدأت.");
+    reply?.({ ok: true });
+    return localSave(notify);
+  }
+
+  if (event === "game:hint") {
+    if (localRoom.game.status !== "playing") return reply?.({ ok: false, message: "ابدأ الجولة أولاً." });
+    const cleanWord = String(payload.word || "").trim();
+    const cleanNumber = Number(payload.number);
+    if (!cleanWord || !Number.isInteger(cleanNumber) || cleanNumber < 1 || cleanNumber > 9) {
+      return reply?.({ ok: false, message: "اكتب كلمة ورقم من 1 إلى 9." });
+    }
+    localRoom.game.hint = { word: cleanWord.slice(0, 20), number: cleanNumber };
+    localRoom.game.guessesMade = 0;
+    localRoom.game.guessLimit = cleanNumber + 1;
+    localRoom.game.log.unshift(`تلميح الفريق ${localTeamName(localRoom.game.currentTeam)}: ${cleanWord} - ${cleanNumber}.`);
+    reply?.({ ok: true });
+    return localSave(notify);
+  }
+
+  if (event === "game:clearHint") {
+    localRoom.game.hint = null;
+    localRoom.game.log.unshift("تم مسح التلميح.");
+    return localSave(notify);
+  }
+
+  if (event === "game:endTurn") {
+    if (localRoom.game.status === "playing") localSwitchTurn("تم إنهاء الدور.");
+    return localSave(notify);
+  }
+
+  if (event === "game:reveal") {
+    if (localRoom.game.status !== "playing") return;
+    if (!localRoom.game.hint) return reply?.({ ok: false, message: "القانون الصارم: لا يمكن كشف بطاقة قبل التلميح." });
+    if (localRoom.game.guessesMade >= localRoom.game.guessLimit) {
+      return reply?.({ ok: false, message: "انتهى عدد التخمينات المسموح لهذا الدور." });
+    }
+    const card = localRoom.game.board.find((item) => item.id === payload.cardId);
+    if (!card || card.revealed) return;
+    card.revealed = true;
+    localRoom.game.guessesMade += 1;
+    localRoom.game.log.unshift(`تم كشف بطاقة "${card.word}".`);
+    const actingTeam = localRoom.game.currentTeam;
+    if (card.role === "assassin") {
+      localFinish(actingTeam === "red" ? "blue" : "red", `الفريق ${localTeamName(actingTeam)} كشف القاتل وخسر.`);
+    } else if (localRemaining("red") === 0) {
+      localFinish("red", "الفريق الأحمر فاز!");
+    } else if (localRemaining("blue") === 0) {
+      localFinish("blue", "الفريق الأزرق فاز!");
+    } else if (card.role !== actingTeam) {
+      localSwitchTurn(card.role === "neutral" ? "بطاقة محايدة." : "بطاقة للفريق الآخر.");
+    } else if (localRoom.game.guessesMade >= localRoom.game.guessLimit) {
+      localSwitchTurn("وصل الفريق إلى الحد الأعلى للتخمينات.");
+    }
+    reply?.({ ok: true });
+    return localSave(notify);
+  }
+}
+
+function restoreLocalRoom() {
+  if (realtimeAvailable) return;
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCAL_SAVE_KEY) || "null");
+    if (!saved?.local) return;
+    localRoom = saved;
+    room = localClone(localRoom);
+    renderRoom();
+  } catch {}
 }
 
 function go(page, push = true) {
@@ -488,3 +744,10 @@ socket.on("connect", () => renderRoom());
 
 go(pageFromPath(), false);
 revealVisible();
+restoreLocalRoom();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
