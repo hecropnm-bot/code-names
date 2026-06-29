@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>كود نيمز - لعبة فرق عربية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-nav">
+      <a class="brand" href="/" data-route="home" aria-label="الرئيسية">
+        <span class="brand-mark">ك ن</span>
+        <span class="brand-text">
+          <span>كود نيمز</span>
+          <small>by mohmed ali</small>
+        </span>
+      </a>
+      <nav class="nav-links" aria-label="التنقل">
+        <a href="/rooms" data-route="rooms">الغرف</a>
+        <a href="/game" data-route="game">اللعبة</a>
+        <a href="/rules" data-route="rules">الشرح</a>
+        <a href="/teams" data-route="teams">الفرق</a>
+        <a href="/lamma" data-route="lamma">لمة</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page hero active" data-page="home">
+        <div class="hero-copy reveal">
+          <p class="eyebrow">لعبة كلمات جماعية</p>
+          <h1>كود نيمز</h1>
+          <p class="hero-text">كوّن غرفة، ادخل أنت وأصدقاؤك، اختاروا الفريق الأحمر أو الأزرق، ثم حاولوا كشف العملاء قبل الوصول إلى القاتل.</p>
+          <div class="hero-actions">
+            <button class="button button-primary" data-route="rooms" type="button">ابدأ الآن</button>
+            <button class="button button-gold" data-route="lamma" type="button">طور لمة</button>
+            <button class="button button-secondary" data-route="rules" type="button">شرح اللعبة</button>
+          </div>
+        </div>
+        <div class="hero-art reveal" aria-hidden="true">
+          <div class="agent-card agent-red"><span>الأحمر</span><strong>9</strong></div>
+          <div class="agent-card agent-blue"><span>الأزرق</span><strong>8</strong></div>
+          <div class="agent-card agent-neutral"><span>محايد</span><strong>7</strong></div>
+          <div class="agent-card agent-assassin"><span>قاتل</span><strong>×</strong></div>
+        </div>
+      </section>
+
+      <section class="page" data-page="rooms">
+        <div class="section-heading reveal">
+          <p class="eyebrow">الغرف</p>
+          <h2>أنشئ غرفة أو ادخل برمز</h2>
+        </div>
+        <div class="room-grid">
+          <section class="panel reveal">
+            <h3>إنشاء غرفة</h3>
+            <form id="createRoomForm" class="form-stack">
+              <label>اسمك <input id="createName" required maxlength="18" placeholder="مثال: علي" /></label>
+              <label>اسم الغرفة <input id="roomName" maxlength="28" placeholder="غرفة الأصدقاء" /></label>
+              <label>طور اللعب
+                <select id="roomMode">
+                  <option value="online">غرفة أونلاين - كل لاعب من جهازه</option>
+                  <option value="lamma">لمة - فريقين في نفس المكان</option>
+                </select>
+              </label>
+              <button class="button button-primary" type="submit">إنشاء غرفة</button>
+            </form>
+          </section>
+          <section class="panel reveal">
+            <h3>دخول غرفة</h3>
+            <form id="joinRoomForm" class="form-stack">
+              <label>اسمك <input id="joinName" required maxlength="18" placeholder="مثال: زهراء" /></label>
+              <label>رمز الغرفة <input id="joinCode" required maxlength="5" placeholder="ABCDE" /></label>
+              <button class="button button-blue" type="submit">دخول الغرفة</button>
+            </form>
+          </section>
+        </div>
+        <p class="notice" id="roomMessage" aria-live="polite"></p>
+      </section>
+
+      <section class="page" data-page="game">
+        <div class="game-top reveal">
+          <div>
+            <p class="eyebrow" id="roomEyebrow">لم تدخل غرفة بعد</p>
+            <h2 id="roomTitle">اللعبة</h2>
+            <span class="mode-badge" id="modeBadge">طور عادي</span>
+          </div>
+          <div class="room-actions">
+            <button class="button button-secondary" id="copyLinkButton" type="button">نسخ رابط الدعوة</button>
+            <button class="button button-gold" id="startGameButton" type="button">بدء الجولة</button>
+          </div>
+        </div>
+
+        <div class="game-layout">
+          <section class="panel board-panel reveal">
+            <div class="panel-header">
+              <div>
+                <h3>لوحة الكلمات</h3>
+                <p id="viewDescription">وضع اللاعبين يخفي الخريطة السرية.</p>
+              </div>
+              <span class="turn-pill" id="turnPill">انتظار</span>
+            </div>
+            <div class="active-hint" id="activeHint">التلميح: لا يوجد</div>
+            <div class="strict-status" id="strictStatus">القوانين الصارمة: انتظر التلميح قبل الكشف.</div>
+            <div class="board" id="board"></div>
+          </section>
+
+          <aside class="side-stack">
+            <section class="panel reveal">
+              <h3>أنا في الغرفة</h3>
+              <div class="profile-grid">
+                <label>اسمي <input id="playerName" maxlength="18" /></label>
+                <label>دوري
+                  <select id="playerRole">
+                    <option value="guesser">لاعب تخمين</option>
+                    <option value="spymaster">قائد الفريق</option>
+                  </select>
+                </label>
+              </div>
+              <div class="control-row">
+                <button class="button button-red" id="joinRedButton" type="button">انضم للأحمر</button>
+                <button class="button button-blue" id="joinBlueButton" type="button">انضم للأزرق</button>
+              </div>
+              <button class="button button-gold full" id="readyButton" type="button">جاهز للأونلاين</button>
+              <button class="button button-secondary full" id="toggleMapButton" type="button">عرض خريطة القائد</button>
+              <p class="notice" id="actionMessage" aria-live="polite"></p>
+            </section>
+
+            <section class="panel reveal lamma-panel" id="lammaPanel">
+              <div class="panel-header">
+                <div>
+              <p class="eyebrow">طور لمة</p>
+              <h3>إعداد اللعب بنفس المكان</h3>
+                </div>
+              </div>
+              <p>هذا الطور مناسب إذا الفريقين جالسين بنفس المكان. القائد يمسك الجهاز وقت التلميح، ثم يرجع الجهاز للاعبين حتى يخمنون.</p>
+              <div class="lamma-flow">
+                <div><strong>1</strong><span>القائد يفتح الخريطة ويعطي تلميحًا</span></div>
+                <div><strong>2</strong><span>اضغط وضع التخمين قبل تسليم الهاتف</span></div>
+                <div><strong>3</strong><span>الفريق يكشف البطاقات المسموحة فقط</span></div>
+              </div>
+              <div class="control-row">
+                <button class="button button-blue" id="captainModeButton" type="button">وضع القائد</button>
+                <button class="button button-primary" id="guessModeButton" type="button">وضع التخمين</button>
+              </div>
+              <div class="profile-grid">
+                <label>اسم الأحمر <input id="lammaRedName" maxlength="22" /></label>
+                <label>قائد الأحمر <input id="lammaRedCaptain" maxlength="22" /></label>
+                <label>اسم الأزرق <input id="lammaBlueName" maxlength="22" /></label>
+                <label>قائد الأزرق <input id="lammaBlueCaptain" maxlength="22" /></label>
+              </div>
+              <label>لاعبو الأحمر <textarea id="lammaRedPlayers" rows="3" placeholder="كل اسم بسطر"></textarea></label>
+              <label>لاعبو الأزرق <textarea id="lammaBluePlayers" rows="3" placeholder="كل اسم بسطر"></textarea></label>
+              <button class="button button-primary full" id="saveLammaButton" type="button">حفظ إعدادات لمة</button>
+            </section>
+
+            <section class="panel reveal" id="teams">
+              <h3>الفرق</h3>
+              <div class="teams-list">
+                <div class="team-box red-box"><strong id="redTeamTitle">الفريق الأحمر</strong><ul id="redPlayers"></ul><small id="redRemaining">9 بطاقات</small></div>
+                <div class="team-box blue-box"><strong id="blueTeamTitle">الفريق الأزرق</strong><ul id="bluePlayers"></ul><small id="blueRemaining">8 بطاقات</small></div>
+              </div>
+            </section>
+
+            <section class="panel reveal">
+              <h3>تلميح القائد</h3>
+              <form id="hintForm" class="hint-form">
+                <label>الكلمة <input id="hintWord" maxlength="20" /></label>
+                <label>العدد <input id="hintNumber" type="number" min="1" max="9" /></label>
+                <button class="button button-primary" type="submit">إرسال التلميح</button>
+              </form>
+              <div class="control-row">
+                <button class="button button-secondary" id="clearHintButton" type="button">مسح التلميح</button>
+                <button class="button button-red" id="endTurnButton" type="button">إنهاء الدور</button>
+              </div>
+            </section>
+          </aside>
+        </div>
+
+        <section class="panel log-panel reveal">
+          <h3>سجل اللعبة</h3>
+          <ul class="game-log" id="gameLog"></ul>
+        </section>
+      </section>
+
+      <section class="page" data-page="rules">
+        <div class="section-heading reveal">
+          <p class="eyebrow">شرح اللعبة</p>
+          <h2>كيف تلعب كود نيمز؟</h2>
+        </div>
+        <div class="rules-grid">
+          <article class="panel reveal"><h3>1. القادة</h3><p>كل فريق يختار قائدًا يرى خريطة البطاقات السرية ويعطي تلميحًا من كلمة ورقم.</p></article>
+          <article class="panel reveal"><h3>2. اللاعبون</h3><p>لاعبو الفريق يخمنون البطاقات المناسبة للتلميح. البطاقة الصحيحة تبقى الدور للفريق.</p></article>
+          <article class="panel reveal"><h3>3. نهاية الدور</h3><p>بطاقة محايدة أو بطاقة للفريق الآخر تنهي الدور تلقائيًا، ويمكن إنهاء الدور يدويًا.</p></article>
+          <article class="panel reveal"><h3>4. القاتل</h3><p>إذا كشف أي فريق بطاقة القاتل يخسر فورًا، لذلك انتبه قبل كل ضغطة.</p></article>
+          <article class="panel reveal"><h3>5. قوانين صارمة</h3><p>لا يوجد كشف قبل التلميح. عدد التخمينات يساوي رقم التلميح زائد تخمين إضافي واحد. القائد لا يكشف في الطور الأونلاين.</p></article>
+          <article class="panel reveal"><h3>6. طور لمة</h3><p>في لمة يكفي جهاز واحد. صاحب الغرفة يدير الدور للفريقين، ويخفي الخريطة قبل أن يبدأ التخمين حتى تكون اللعبة عادلة.</p></article>
+        </div>
+      </section>
+
+      <section class="page" data-page="lamma">
+        <div class="section-heading reveal">
+          <p class="eyebrow">طور لمة</p>
+          <h2>لما تكونون بنفس المكان</h2>
+        </div>
+        <section class="panel reveal lamma-start-panel">
+          <h3>ابدأ لمة من هذا الهاتف</h3>
+          <p>شخص واحد يفتح اللعبة من هاتفه، يكتب اسمه، ثم يبدأ غرفة لمة مباشرة. لا يحتاج كل لاعب يدخل من جهازه.</p>
+          <form id="quickLammaForm" class="form-stack">
+            <label>اسم صاحب الهاتف <input id="quickLammaName" required maxlength="18" placeholder="مثال: أحمد" /></label>
+            <label>اسم الجلسة <input id="quickLammaRoom" maxlength="28" placeholder="لمة الشباب" /></label>
+            <button class="button button-primary" type="submit">ابدأ لمة الآن</button>
+          </form>
+        </section>
+        <div class="rules-grid">
+          <article class="panel reveal"><h3>طريقة الجلسة</h3><p>افتح غرفة بطور لمة، اكتب أسماء الفريقين والقادة، ثم ضع الجهاز عند القائد وقت التلميح فقط.</p></article>
+          <article class="panel reveal"><h3>من يمسك الجهاز؟</h3><p>صاحب الغرفة يدير اللعبة. بعد التلميح يخفي الخريطة ويسلم الجهاز للاعبين حتى يضغطون على التخمين.</p></article>
+          <article class="panel reveal"><h3>التزام حقيقي</h3><p>لا تفتح خريطة القائد أمام اللاعبين. زر الخريطة يعطي تحذيرًا قبل العرض، واللعبة تسجل الأحداث في السجل.</p></article>
+          <article class="panel reveal"><h3>ابدأ بسرعة</h3><p>من صفحة الغرف اختر طور لمة، ثم أنشئ الغرفة وابدأ الجولة مباشرة بدون انتظار دخول كل لاعب بجهازه.</p></article>
+        </div>
+      </section>
+
+      <section class="page" data-page="teams">
+        <div class="section-heading reveal">
+          <p class="eyebrow">إدارة الفريق</p>
+          <h2>اختيار الفريق والدور</h2>
+        </div>
+        <section class="panel reveal">
+          <p class="big-text">بعد دخول الغرفة افتح صفحة اللعبة، اختر الفريق الأحمر أو الأزرق، ثم اختر هل أنت قائد الفريق أو لاعب تخمين. القائد يرى الخريطة السرية فقط من زر خريطة القائد.</p>
+          <button class="button button-primary" data-route="game" type="button">اذهب إلى اللعبة</button>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>كود نيمز العربية</span>
+      <strong>mohmed ali</strong>
+    </footer>
+
+    <div class="result-overlay" id="resultOverlay" aria-hidden="true">
+      <section class="result-panel">
+        <p class="eyebrow">انتهت الجولة</p>
+        <h2 id="resultTitle">فوز!</h2>
+        <p id="resultText">انتهت اللعبة.</p>
+        <button class="button button-primary" id="playAgainButton" type="button">العب مرة ثانية</button>
+      </section>
+    </div>
+
+    <div class="mobile-playbar" id="mobilePlaybar" aria-label="أدوات اللعب السريعة">
+      <div class="mobile-playbar-status">
+        <strong id="mobileTurnText">انتظار</strong>
+        <span id="mobileHintText">لا يوجد تلميح</span>
+      </div>
+      <div class="mobile-playbar-actions">
+        <button class="quick-action" id="quickHintButton" type="button">تلميح</button>
+        <button class="quick-action" id="quickSpyButton" type="button">قائد</button>
+        <button class="quick-action danger" id="quickEndTurnButton" type="button">إنهاء</button>
+      </div>
+    </div>
+
+    <div class="sheet-overlay" id="hintSheet" aria-hidden="true">
+      <section class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="hintSheetTitle">
+        <div class="sheet-header">
+          <h3 id="hintSheetTitle">تلميح سريع</h3>
+          <button class="sheet-close" id="closeHintSheetButton" type="button" aria-label="إغلاق">×</button>
+        </div>
+        <form id="quickHintForm" class="quick-hint-form">
+          <label>الكلمة <input id="quickHintWord" maxlength="20" autocomplete="off" /></label>
+          <label>العدد <input id="quickHintNumber" type="number" min="1" max="9" /></label>
+          <button class="button button-primary" type="submit">إرسال التلميح</button>
+        </form>
+      </section>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/script.js"></script>
+  </body>
+</html>
