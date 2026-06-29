@@ -1,46 +1,30 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "headers": [
+  "routes": [
     {
-      "source": "/styles.css",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/css; charset=utf-8"
-        }
-      ]
+      "src": "/styles.css",
+      "headers": {
+        "Content-Type": "text/css; charset=utf-8"
+      },
+      "dest": "/styles.css"
     },
     {
-      "source": "/script.js",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript; charset=utf-8"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/rooms",
-      "destination": "/index.html"
+      "src": "/script.js",
+      "headers": {
+        "Content-Type": "application/javascript; charset=utf-8"
+      },
+      "dest": "/script.js"
     },
     {
-      "source": "/game",
-      "destination": "/index.html"
+      "handle": "filesystem"
     },
     {
-      "source": "/rules",
-      "destination": "/index.html"
+      "src": "/(rooms|game|rules|teams|lamma)(/.*)?",
+      "dest": "/index.html"
     },
     {
-      "source": "/teams",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/lamma",
-      "destination": "/index.html"
+      "src": "/",
+      "dest": "/index.html"
     }
   ]
 }
